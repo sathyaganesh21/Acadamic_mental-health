@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrated AI Emotional Intelligence · Academic Mental Health</title>
+    <!-- face-api, chart.js, jspdf, papaparse (for CSV) -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background: linear-gradient(145deg, #f6f0ff 0%, #e9dbff 100%);
+            transition: background 0.4s, color 0.4s;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body.dark {
+            background: linear-gradient(145deg, #1e1a2e 0%, #2a2342 100%);
+            color: #f0eaff;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6" fill="%23c49bff" opacity="0.2"/><circle cx="50" cy="30" r="8" fill="%23ffb7c5" opacity="0.15"/><circle cx="30" cy="50" r="5" fill="%239d7eff" opacity="0.2"/></svg>');
+            background-size: 180px 180px;
+            animation: floatParticles 25s infinite linear;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes floatParticles {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(40px, 20px) rotate(5deg); }
+        }
+        .main-container { max-width: 1600px; margin: 0 auto; position: relative; z-index: 2; }
+        h1 {
+            font-size: 2.4rem; font-weight: 600;
+            background: linear-gradient(135deg, #8a6de9, #e6a0b5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.5px;
+            line-height: 1.3;
+            text-shadow: 0 0 30px #d9b0ff;
+        }
+        .sub {
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            border-left: 5px solid #c49bff;
+            padding-left: 1rem;
+            color: #4a3a6b;
+            font-weight: 400;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.6);
+        }
+        body.dark .sub { color: #ccb8ff; border-left-color: #ae92f0; }
+        .tab-bar { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn {
+            background: rgba(255, 245, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(200, 170, 255, 0.6);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(150, 120, 220, 0.2);
+            transition: 0.3s;
+            color: #4a3a6b;
+            position: relative;
+            overflow: hidden;
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 10%, transparent 20%);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .tab-btn:hover::after { opacity: 0.3; transform: scale(1.2); }
+        body.dark .tab-btn { background: rgba(50, 40, 70, 0.6); border-color: #7b64b0; color: #e2d0ff; box-shadow: 0 10px 25px #3a2e5a; }
+        .tab-btn.active {
+            background: #c49bff;
+            color: #2f1f3f;
+            border-color: #b085ff;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px #b28eff;
+        }
+        body.dark .tab-btn.active { background: #8f75d0; color: white; border-color: #c6aaff; box-shadow: 0 15px 30px #6a55a0; }
+        .tab-panel {
+            display: none;
+            background: rgba(255, 250, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 2.5rem;
+            padding: 30px;
+            box-shadow: 0 25px 50px -8px rgba(150, 120, 220, 0.3), inset 0 2px 4px rgba(255,255,255,0.8);
+            border: 2px solid rgba(220, 190, 255, 0.6);
+            margin-bottom: 20px;
+            transition: all 0.4s;
+        }
+        body.dark .tab-panel { background: rgba(30, 25, 50, 0.5); border-color: #6a58a0; box-shadow: 0 25px 50px -8px #3e3466; }
+        .tab-panel.active { display: block; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+        .card {
+            background: rgba(255, 245, 255, 0.5);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 22px;
+            border: 2px solid rgba(210, 180, 255, 0.6);
+            box-shadow: 0 15px 30px rgba(150, 120, 220, 0.15);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -30%; left: -30%;
+            width: 160%; height: 160%;
+            background: radial-gradient(circle, rgba(255,230,255,0.4) 10%, transparent 60%);
+            opacity: 0;
+            transition: 0.5s;
+        }
+        .card:hover::before { opacity: 0.4; transform: scale(1.1); }
+        .card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 25px 40px rgba(170, 130, 240, 0.3); }
+        body.dark .card { background: rgba(40, 35, 65, 0.6); border-color: #7a65b5; }
+        body.dark .card:hover { box-shadow: 0 25px 40px #5b4d90; }
+        .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #6a4f9a; text-shadow: 0 2px 5px #ffe0ff; }
+        body.dark .card-title { color: #dbb5ff; text-shadow: 0 2px 5px #4a3f7a; }
+        .btn {
+            background: #e6d0ff;
+            border: none;
+            color: #3d2b4d;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 8px 18px #c4a5ff;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 10%, transparent 30%);
+            transition: 0.3s;
+            opacity: 0;
+        }
+        .btn:hover::after { opacity: 0.5; transform: scale(1.3); }
+        body.dark .btn { background: #6a56b0; color: white; box-shadow: 0 8px 18px #4a3e7a; }
+        .btn-primary { background: #c49bff; }
+        body.dark .btn-primary { background: #8f7ad0; }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.4; pointer-events: none; }
+        .flex-row { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+        video, canvas, #faceImage {
+            width: 100%; max-height: 260px; object-fit: contain;
+            background: #f0e4ff;
+            border-radius: 24px;
+            border: 3px solid #d9b5ff;
+            box-shadow: 0 10px 20px rgba(170,130,240,0.3);
+        }
+        body.dark video, body.dark canvas, body.dark #faceImage { background: #2f2952; border-color: #9982e0; }
+        .canvas-container { position: relative; }
+        #faceNote {
+            position: absolute; bottom: 12px; right: 20px;
+            background: rgba(230, 210, 255, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 6px 18px; border-radius: 30px;
+            font-size: 0.9rem; border: 1px solid #d4b0ff;
+            color: #3d2a4d; font-weight: 500;
+        }
+        body.dark #faceNote { background: #5f5196cc; border-color: #bba8ff; color: white; }
+        .emotion-bars { margin: 15px 0; }
+        .bar-item { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+        .bar-label { width: 90px; font-weight: 500; color: #5a386a; }
+        body.dark .bar-label { color: #d0bcff; }
+        .bar-bg { flex: 1; height: 14px; background: #eddaff; border-radius: 30px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        body.dark .bar-bg { background: #4f4580; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #c49bff, #a870e0); width: 0%; border-radius: 30px; transition: width 0.3s; box-shadow: 0 0 10px #c49bff; }
+        body.dark .bar-fill { background: linear-gradient(90deg, #b09eff, #7a61d0); }
+        .history-chart { height: 200px; margin-top: 10px; }
+        .calendar-container { margin-top: 20px; background: #f0e2ff; border-radius: 30px; padding: 20px; box-shadow: inset 0 2px 10px #dbbdff; }
+        body.dark .calendar-container { background: #403973; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; }
+        .cal-day {
+            background: #edd4ff; border-radius: 16px; padding: 12px 5px;
+            text-align: center; font-size: 0.9rem; color: #452f55;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 5px 10px #d7b5ff;
+        }
+        body.dark .cal-day { background: #5b4f94; color: #f0e4ff; box-shadow: 0 5px 10px #3d3570; }
+        .cal-day:hover { transform: scale(1.05); background: #dbb5ff; box-shadow: 0 8px 15px #c49bff; }
+        body.dark .cal-day:hover { background: #8470d0; }
+        .cal-day.selected { border: 3px solid #ffd966; }
+        .chat-area {
+            background: #f9f0ff; border-radius: 24px; padding: 15px;
+            height: 180px; overflow-y: auto; margin: 15px 0;
+            border: 2px solid #dbb5ff; color: #452f55;
+            box-shadow: inset 0 2px 10px #e9d0ff;
+        }
+        body.dark .chat-area { background: #3f3970; border-color: #a28de0; color: #f0e6ff; }
+        .chat-msg { margin: 8px 0; }
+        .chat-user { color: #b34f7a; font-weight: 500; }
+        .chat-bot { color: #3f7a5a; }
+        body.dark .chat-bot { color: #b3ffb3; }
+        .warning-badge { background: #ff6b6b; color: #1a0f0f; padding: 5px 12px; border-radius: 30px; font-weight: bold; }
+        .stress-meter { width: 100%; height: 20px; background: #eddaff; border-radius: 30px; overflow: hidden; margin: 10px 0; box-shadow: inset 0 2px 4px #00000020; }
+        body.dark .stress-meter { background: #4f4580; }
+        .stress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #c49bff, #ffb3b3); transition: width 0.3s; box-shadow: 0 0 10px #c49bff; }
+        .recommend-box, .feedback-area {
+            background: linear-gradient(145deg, #fff2fd, #f2e4ff);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 18px 22px;
+            margin-top: 12px;
+            font-size: 1.1rem;
+            border: 3px solid #d9b5ff;
+            box-shadow: 0 0 30px #d9b5ff, 0 15px 30px rgba(170, 130, 240, 0.3);
+            color: #3a1f4a;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 500;
+            min-height: 90px;
+            animation: glowPulse 4s infinite alternate;
+        }
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 25px #d9b5ff, 0 15px 30px rgba(170,130,240,0.3); }
+            100% { box-shadow: 0 0 45px #c49bff, 0 20px 35px rgba(150,100,230,0.5); }
+        }
+        body.dark .recommend-box, body.dark .feedback-area {
+            background: linear-gradient(145deg, #685ca8, #4a3e82);
+            border-color: #c9adff;
+            color: #fff5f5;
+            box-shadow: 0 0 30px #ac96f0, 0 15px 30px #4f4285;
+        }
+        .recommend-box i, .feedback-area i { font-size: 2.2rem; filter: drop-shadow(2px 4px 6px #c49bff); }
+        .recommend-box::before { content: '💡'; font-size: 2rem; margin-right: 10px; }
+        .feedback-area::before { content: '🤖'; font-size: 2rem; margin-right: 10px; }
+        .feedback-area[data-emotion="happy"]::before { content: '😊'; }
+        .feedback-area[data-emotion="sad"]::before { content: '😢'; }
+        .feedback-area[data-emotion="angry"]::before { content: '😠'; }
+        .feedback-area[data-emotion="fearful"]::before { content: '😨'; }
+        .feedback-area[data-emotion="disgusted"]::before { content: '🤢'; }
+        .feedback-area[data-emotion="surprised"]::before { content: '😲'; }
+        .feedback-area[data-emotion="neutral"]::before { content: '😐'; }
+        @keyframes gentlePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .feedback-area, .recommend-box { animation: gentlePop 4s infinite ease-in-out, glowPulse 4s infinite alternate; }
+        .lang-selector {
+            margin-left: 20px; background: #e6d0ff; color: #3d2b4d;
+            border: none; padding: 8px 16px; border-radius: 30px;
+            font-size: 0.9rem; cursor: pointer; font-weight: 600;
+            box-shadow: 0 5px 15px #c4a5ff;
+        }
+        body.dark .lang-selector { background: #6a56b0; color: white; box-shadow: 0 5px 15px #4a3e7a; }
+        .permission-indicator {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f0e2ff; padding: 5px 15px; border-radius: 30px;
+            font-size: 0.8rem; color: #452b55; box-shadow: 0 2px 8px #d7b5ff;
+        }
+        body.dark .permission-indicator { background: #4e4582; color: #f0e0ff; }
+        #darkToggle {
+            position: fixed; top: 25px; right: 25px;
+            background: #e6d0ff; border: none; color: #2f1f3f;
+            padding: 14px 24px; border-radius: 50px; cursor: pointer;
+            z-index: 1000; font-size: 1rem; box-shadow: 0 8px 25px #c4a5ff;
+            backdrop-filter: blur(5px); font-weight: 600;
+            transition: 0.3s;
+        }
+        #darkToggle:hover { transform: scale(1.05); box-shadow: 0 12px 30px #b28eff; }
+        body.dark #darkToggle { background: #6a56b0; color: white; box-shadow: 0 8px 25px #4a3e7a; }
+        .note { font-size: 0.85rem; opacity: 0.7; margin-top: 15px; color: #5a4a7a; }
+        .glass-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #c49bff, #e6a0b5, transparent);
+            margin: 20px 0;
+        }
+        body.dark .glass-divider { background: linear-gradient(90deg, transparent, #ac96f0, #b88cd0, transparent); }
+        .bar-item span:last-child { font-weight: 600; color: #a13f6a; }
+        body.dark .bar-item span:last-child { color: #eac0ff; }
+        /* breathing animation */
+        .breath-circle {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, #c49bff, #a870e0);
+            margin: 20px auto;
+            transition: transform 4s ease-in-out;
+            animation: breathe 8s infinite;
+        }
+        @keyframes breathe {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        .crisis-alert {
+            background: #ffcccc; color: #a10000; padding: 10px; border-radius: 30px;
+            text-align: center; margin-top: 10px; display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="darkToggle"><i class="fas fa-moon"></i> dark/light</button>
+    <div class="main-container">
+        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <h1>🧠 Integrated AI Emotional Intelligence<br><span style="font-size: 1.8rem;">for Academic Mental Health Support</span></h1>
+            <select id="langSelect" class="lang-selector">
+                <option value="en">🇬🇧 English</option>
+                <option value="ta">🇮🇳 தமிழ்</option>
+            </select>
+            <span class="permission-indicator" id="camPerm"><i class="fas fa-video"></i> camera?</span>
+            <span class="permission-indicator" id="micPerm"><i class="fas fa-microphone"></i> mic?</span>
+        </div>
+        <div class="sub">fast face · full‑sentence text · bilingual voice · wellness tools</div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="face">👤 face</button>
+            <button class="tab-btn" data-tab="text">🔤 text</button>
+            <button class="tab-btn" data-tab="voice">🎙️ voice</button>
+            <button class="tab-btn" data-tab="wellness">🌿 wellness</button>
+        </div>
+
+        <!-- FACE TAB -->
+        <div id="faceTab" class="tab-panel active">
+            <div class="grid-2">
+                <!-- left column -->
+                <div>
+                    <div class="card">
+                        <div class="card-title"><i class="fas fa-face-smile"></i> fast face (150ms interval)</div>
+                        <div class="canvas-container">
+                            <video id="faceVideo" width="400" height="300" autoplay muted playsinline style="display:none;"></video>
+                            <img id="faceImage" src="#" style="display:none;">
+                            <canvas id="faceCanvas" width="400" height="300"></canvas>
+                            <div id="faceNote">no face</div>
+                        </div>
+                        <div class="flex-row">
+                            <button class="btn" id="uploadFaceBtn"><i class="fas fa-upload"></i> upload</button>
+                            <button class="btn btn-primary" id="startWebcamBtn"><i class="fas fa-camera"></i> webcam</button>
+                            <button class="btn" id="stopWebcamBtn" disabled><i class="fas fa-stop"></i> stop</button>
+                        </div>
+                        <div id="dominantEmotion" style="font-size:1.8rem; margin:15px 0 5px;">😐 neutral</div>
+                        <div class="emotion-bars" id="emotionBars"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fas fa-robot"></i> intelligent feedback</div>
+                        <div class="feedback-area" id="feedbackMessage" data-emotion="neutral">Your emotional state will be analyzed here.</div>
+                    </div>
+                </div>
+
+                <!-- right column -->
+                <div>
+                    <div class="grid-2" style="margin-bottom:20px;">
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-heart-crack"></i> mental health</div>
+                            <div id="mentalHealthWarning" style="font-size:1.2rem;">🟢 stable</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-shield-woman"></i> panic detection</div>
+                            <div id="panicAlert" style="font-size:1.2rem;">🟡 no panic</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2" style="margin-bottom:20px;">
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-graduation-cap"></i> attention</div>
+                            <div id="attentionLevel">🎯 focus: 80%</div>
+                            <div class="stress-meter"><div class="stress-fill" id="attentionFill" style="width:80%"></div></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-heart-pulse"></i> stress meter</div>
+                            <div id="stressValue">stress: 35%</div>
+                            <div class="stress-meter"><div class="stress-fill" id="stressFill" style="width:35%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2" style="margin-bottom:20px;">
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-lightbulb"></i> recommendation</div>
+                            <div id="moodRecommendation" class="recommend-box">☕ take a break</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-chart-line"></i> trend</div>
+                            <div id="trendPrediction">next: 😊 happy</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fas fa-calendar-alt"></i> mood calendar (updates instantly)</div>
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button class="btn" id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
+                                <span id="currentMonthYear">March 2026</span>
+                                <button class="btn" id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div id="calendarGrid" class="calendar-grid"></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:20px;">
+                        <div class="card-title"><i class="fas fa-chart-bar"></i> emotion history</div>
+                        <canvas id="historyChart" class="history-chart"></canvas>
+                    </div>
+
+                    <div class="grid-2" style="margin-top:20px;">
+                        <div class="card">
+                            <div class="card-title"><i class="fas fa-file-pdf"></i> report</div>
+                            <button class="btn btn-primary" id="generatePdfBtn"><i class="fas fa-download"></i> download PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-divider"></div>
+        </div>
+
+        <!-- TEXT TAB (full‑sentence analysis) -->
+        <div id="textTab" class="tab-panel">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-keyboard"></i> full‑sentence emotion</div>
+                    <textarea id="sentenceInput" rows="3" placeholder="Type a sentence in English or Tamil (e.g., I am very stressed today / எனக்கு மிகவும் கவலையாக இருக்கிறது)" style="width:100%; padding:14px; border-radius:24px; border:none; margin-bottom:15px; background:#ffffffd0; color:#2e1f2e; font-size:1rem; box-shadow: inset 0 2px 10px #e4d0ff;"></textarea>
+                    <button class="btn btn-primary" id="analyzeSentenceBtn">analyze & get solution</button>
+                    <div id="sentenceResult" style="margin-top:20px; font-size:1.3rem;">😐 neutral</div>
+                    <div class="feedback-area" id="textFeedback" data-emotion="neutral" style="margin-top:15px;">Your personalized advice will appear here.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VOICE TAB (bilingual) -->
+        <div id="voiceTab" class="tab-panel">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-headphones"></i> bilingual voice (ta-IN / en-IN)</div>
+                <button class="btn btn-primary" id="voiceStartBtn">start voice</button>
+                <button class="btn" id="voiceStopBtn" disabled>stop</button>
+                <div id="voiceTranscript" style="background:#f9efff; border-radius:24px; padding:20px; min-height:140px; margin:25px 0; border:3px solid #d9b5ff; color:#2e1b3e; font-size:1rem; box-shadow: inset 0 2px 10px #edd0ff;">click start and speak...</div>
+                <div style="display:flex; gap:30px; font-size:1.2rem;">
+                    <span id="voiceSentimentLabel">😐 neutral</span>
+                    <span id="voiceSentimentScore">(0)</span>
+                </div>
+                <div class="feedback-area" id="voiceFeedback" data-emotion="neutral" style="margin-top:15px;">Voice‑based advice will appear here.</div>
+            </div>
+        </div>
+
+        <!-- WELLNESS TOOLS TAB (new) -->
+        <div id="wellnessTab" class="tab-panel">
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-lungs"></i> guided breathing</div>
+                    <div class="breath-circle"></div>
+                    <p style="text-align:center; margin:10px 0;">Inhale ... Exhale ...</p>
+                    <button class="btn btn-primary" id="startBreathingBtn">start breathing</button>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-quote-right"></i> daily affirmation</div>
+                    <div id="affirmationText" style="font-size:1.2rem; margin:15px 0;">You are capable and strong.</div>
+                    <button class="btn" id="newAffirmationBtn">new affirmation</button>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-lightbulb"></i> mood activity</div>
+                    <div id="activitySuggestion" style="font-size:1.2rem; margin:15px 0;">Take a short walk.</div>
+                    <button class="btn" id="newActivityBtn">suggest another</button>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-download"></i> export data</div>
+                    <button class="btn btn-primary" id="exportCsvBtn"><i class="fas fa-file-csv"></i> download CSV</button>
+                    <p class="note">all emotion history</p>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-history"></i> 7‑day summary</div>
+                    <div id="weeklySummary">😊 0 · 😢 0 · 😠 0 · 😐 0</div>
+                </div>
+            </div>
+            <div class="crisis-alert" id="crisisAlert">
+                🆘 If you're in crisis, please contact a helpline: <strong>988</strong> (Suicide & Crisis Lifeline)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- GLOBAL STATE ----------
+            let modelsLoaded = false;
+            let isVideoActive = false;
+            let videoStream = null;
+            let detectionInterval = null;
+            const faceVideo = document.getElementById('faceVideo');
+            const faceImage = document.getElementById('faceImage');
+            const faceCanvas = document.getElementById('faceCanvas');
+            const faceNote = document.getElementById('faceNote');
+            const dominantSpan = document.getElementById('dominantEmotion');
+            const emotionBarsDiv = document.getElementById('emotionBars');
+            const feedbackDiv = document.getElementById('feedbackMessage');
+            const langSelect = document.getElementById('langSelect');
+            let currentLang = 'en';
+
+            const emotionList = ['neutral','happy','sad','angry','fearful','disgusted','surprised'];
+            const emotionDisplay = {
+                neutral: '😐 neutral', happy: '😊 happy', sad: '😢 sad',
+                angry: '😠 angry', fearful: '😨 fearful', disgusted: '🤢 disgusted', surprised: '😲 surprised'
+            };
+
+            const WINDOW_SIZE = 5;
+            let rawFrameBuffer = [];
+            let smoothedProbabilities = {
+                neutral:0, happy:0, sad:0, angry:0, fearful:0, disgusted:0, surprised:0
+            };
+
+            let emotionHistory = JSON.parse(localStorage.getItem('emotionHistory')) || [];
+            let chart;
+            let currentDate = new Date();
+            let selectedDate = new Date().toDateString();
+
+            const enLexicon = {
+                'happy': { emotion: 'happy', score: 2 }, 'glad': { emotion: 'happy', score: 1.5 },
+                'joy': { emotion: 'happy', score: 2 }, 'excited': { emotion: 'happy', score: 2 },
+                'wonderful': { emotion: 'happy', score: 2.5 }, 'great': { emotion: 'happy', score: 1.5 },
+                'good': { emotion: 'happy', score: 1 }, 'fantastic': { emotion: 'happy', score: 2.5 },
+                'love': { emotion: 'happy', score: 2.5 }, 'awesome': { emotion: 'happy', score: 2 },
+                'sad': { emotion: 'sad', score: 2 }, 'unhappy': { emotion: 'sad', score: 2 },
+                'depressed': { emotion: 'sad', score: 3 }, 'down': { emotion: 'sad', score: 1.5 },
+                'gloomy': { emotion: 'sad', score: 2 }, 'heartbroken': { emotion: 'sad', score: 3 },
+                'angry': { emotion: 'angry', score: 2 }, 'mad': { emotion: 'angry', score: 2 },
+                'furious': { emotion: 'angry', score: 3 }, 'irritated': { emotion: 'angry', score: 1.5 },
+                'annoyed': { emotion: 'angry', score: 1.5 },
+                'fearful': { emotion: 'fearful', score: 2 }, 'scared': { emotion: 'fearful', score: 2 },
+                'afraid': { emotion: 'fearful', score: 2 }, 'terrified': { emotion: 'fearful', score: 3 },
+                'anxious': { emotion: 'fearful', score: 2.5 }, 'worried': { emotion: 'fearful', score: 2 },
+                'stress': { emotion: 'fearful', score: 2.5 }, 'stressed': { emotion: 'fearful', score: 2.5 },
+                'disgusted': { emotion: 'disgusted', score: 2 }, 'gross': { emotion: 'disgusted', score: 1.5 },
+                'surprised': { emotion: 'surprised', score: 2 }, 'shocked': { emotion: 'surprised', score: 2 },
+                'amazed': { emotion: 'surprised', score: 2 },
+                'okay': { emotion: 'neutral', score: 0.5 }, 'fine': { emotion: 'neutral', score: 0.5 }
+            };
+
+            const taLexicon = {
+                'மகிழ்ச்சி': { emotion: 'happy', score: 2 }, 'சந்தோஷம்': { emotion: 'happy', score: 2 },
+                'நன்றாக': { emotion: 'happy', score: 1 }, 'அருமை': { emotion: 'happy', score: 2.5 },
+                'சோகம்': { emotion: 'sad', score: 2 }, 'வருத்தம்': { emotion: 'sad', score: 2 },
+                'துக்கம்': { emotion: 'sad', score: 2.5 }, 'கோபம்': { emotion: 'angry', score: 2 },
+                'எரிச்சல்': { emotion: 'angry', score: 1.5 }, 'பயம்': { emotion: 'fearful', score: 2 },
+                'அச்சம்': { emotion: 'fearful', score: 2 }, 'கவலை': { emotion: 'fearful', score: 2.5 },
+                'மன அழுத்தம்': { emotion: 'fearful', score: 3 }, 'வெறுப்பு': { emotion: 'disgusted', score: 2 },
+                'அதிர்ச்சி': { emotion: 'surprised', score: 2 }
+            };
+
+            const negations = ['not', 'no', 'never', 'don\'t', 'doesn\'t', 'didn\'t', 'cannot', 'can\'t', 'இல்லை', 'மாட்டேன்', 'கூடாது'];
+
+            function analyzeFullSentence(text, lang) {
+                const words = text.toLowerCase().split(/\W+/);
+                let scores = { neutral:0, happy:0, sad:0, angry:0, fearful:0, disgusted:0, surprised:0 };
+                let negationActive = false;
+                const lexicon = lang === 'ta' ? taLexicon : enLexicon;
+
+                for (let i = 0; i < words.length; i++) {
+                    const w = words[i];
+                    if (negations.includes(w)) {
+                        negationActive = true;
+                        continue;
+                    }
+                    if (lexicon[w]) {
+                        let { emotion, score } = lexicon[w];
+                        if (negationActive) score = -score;
+                        scores[emotion] += score;
+                        negationActive = false;
+                    } else {
+                        negationActive = false;
+                    }
+                }
+
+                let dominant = 'neutral';
+                let maxScore = 0;
+                for (let em of emotionList) {
+                    if (scores[em] > maxScore) {
+                        maxScore = scores[em];
+                        dominant = em;
+                    }
+                }
+                const total = Object.values(scores).reduce((a,b)=>a+Math.abs(b),0) || 1;
+                const probs = {};
+                emotionList.forEach(em => probs[em] = Math.abs(scores[em]) / total);
+
+                return { dominant, probs };
+            }
+
+            function generateFeedback(emotion, stressLevel, lang) {
+                const enFeedback = {
+                    happy: "😊 You seem happy! Keep up the positive energy. Maybe share your joy with someone. 🌟",
+                    sad: "😢 I notice you're feeling sad. It's okay to take a break. Listen to soothing music or talk to a friend. 🎵💙",
+                    angry: "😠 You appear angry. Take deep breaths, step away for a moment, and drink some water. 🧘‍♂️💧",
+                    fearful: "😨 You seem anxious or stressed. Try grounding exercises: name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste. 🌿🧘",
+                    disgusted: "🤢 You look disgusted. Maybe change your environment or do something you enjoy. 🌈✨",
+                    surprised: "😲 You seem surprised! Embrace the moment and reflect on what happened. 🤔💫",
+                    neutral: "😐 You seem calm. This is a good time to focus on productive tasks. 📚✅"
+                };
+                const taFeedback = {
+                    happy: "😊 நீங்கள் மகிழ்ச்சியாக உள்ளீர்கள்! இந்த நேரத்தை அனுபவியுங்கள். உங்கள் மகிழ்ச்சியை பகிர்ந்து கொள்ளுங்கள். 🌟",
+                    sad: "😢 நீங்கள் சோகமாக இருப்பதாக உணர்கிறேன். ஓய்வு எடுத்துக் கொள்ளுங்கள், இசை கேளுங்கள் அல்லது நண்பரிடம் பேசுங்கள். 🎵💙",
+                    angry: "😠 உங்களுக்கு கோபம் வந்துள்ளது. ஆழ்ந்த மூச்சு விடுங்கள், சற்று நேரம் ஒதுங்கி இருந்து தண்ணீர் குடியுங்கள். 🧘‍♂️💧",
+                    fearful: "😨 நீங்கள் கவலையாக உள்ளீர்கள். அடிப்படை பயிற்சிகள் செய்யுங்கள்: 5 பார்க்கும் பொருட்கள், 4 தொடும் பொருட்கள், 3 கேட்கும் ஒலிகள், 2 மணக்கும் வாசனைகள், 1 சுவை. 🌿🧘",
+                    disgusted: "🤢 உங்களுக்கு வெறுப்பாக உள்ளது. சூழலை மாற்றி உங்களுக்கு பிடித்த செயலை செய்யுங்கள். 🌈✨",
+                    surprised: "😲 நீங்கள் ஆச்சரியமாக உள்ளீர்கள்! இந்த தருணத்தை ரசித்து சிந்தியுங்கள். 🤔💫",
+                    neutral: "😐 நீங்கள் அமைதியாக உள்ளீர்கள். இது கவனம் செலுத்த ஏற்ற நேரம். 📚✅"
+                };
+                const map = lang === 'ta' ? taFeedback : enFeedback;
+                return map[emotion] || (lang === 'ta' ? "😶 உங்கள் உணர்வுகளை கவனியுங்கள்." : "😶 Pay attention to your feelings.");
+            }
+
+            async function loadModels() {
+                try {
+                    faceNote.innerText = '⏳ loading models...';
+                    const modelPath = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/';
+                    await faceapi.nets.tinyFaceDetector.load(modelPath);
+                    await faceapi.nets.faceLandmark68Net.load(modelPath);
+                    await faceapi.nets.faceExpressionNet.load(modelPath);
+                    modelsLoaded = true;
+                    faceNote.innerText = '✅ ready';
+                    enableButtons();
+                    document.getElementById('camPerm').innerHTML = '<i class="fas fa-video"></i> camera ready';
+                } catch (err) {
+                    faceNote.innerText = '❌ model error';
+                }
+            }
+
+            function enableButtons() {
+                document.getElementById('uploadFaceBtn').disabled = false;
+                document.getElementById('startWebcamBtn').disabled = false;
+                document.getElementById('voiceStartBtn').disabled = false;
+            }
+
+            function getSensitiveDominant(avgProbs) {
+                const sorted = emotionList.map(em => ({ em, prob: avgProbs[em] })).sort((a,b) => b.prob - a.prob);
+                const top = sorted[0];
+                const second = sorted[1];
+                if (top.em === 'neutral' && second && second.prob >= 0.18 && (top.prob - second.prob) <= 0.1) {
+                    return second.em;
+                }
+                if (top.em !== 'neutral') return top.em;
+                if (top.prob > 0.5) return 'neutral';
+                for (let i = 1; i < sorted.length; i++) {
+                    if (sorted[i].prob >= 0.2) return sorted[i].em;
+                }
+                return 'neutral';
+            }
+
+            function updateSmoothed(rawExp) {
+                rawFrameBuffer.push({ ...rawExp });
+                if (rawFrameBuffer.length > WINDOW_SIZE) rawFrameBuffer.shift();
+                const sums = {};
+                emotionList.forEach(em => sums[em] = 0);
+                rawFrameBuffer.forEach(frame => {
+                    emotionList.forEach(em => sums[em] += frame[em] || 0);
+                });
+                const count = rawFrameBuffer.length;
+                emotionList.forEach(em => {
+                    smoothedProbabilities[em] = count > 0 ? sums[em] / count : 0;
+                });
+                return getSensitiveDominant(smoothedProbabilities);
+            }
+
+            async function detectFaces(source) {
+                if (!modelsLoaded) return;
+                const canvas = faceCanvas;
+                const ctx = canvas.getContext('2d');
+                const displaySize = { width: source.width, height: source.height };
+                if (canvas.width !== displaySize.width || canvas.height !== displaySize.height) {
+                    faceapi.matchDimensions(canvas, displaySize);
+                }
+                const detections = await faceapi.detectAllFaces(source, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks().withFaceExpressions();
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                if (!detections.length) {
+                    faceNote.innerText = '😶 no face';
+                    return;
+                }
+                faceNote.innerText = `👤 ${detections.length} face(s)`;
+                const resized = faceapi.resizeResults(detections, displaySize);
+                faceapi.draw.drawDetections(canvas, resized);
+                faceapi.draw.drawFaceLandmarks(canvas, resized);
+
+                const rawExp = resized[0].expressions;
+                const dominant = updateSmoothed(rawExp);
+
+                updateEmotionPanel(smoothedProbabilities, dominant);
+                updateFeedback(dominant, smoothedProbabilities);
+
+                const historyEntry = {
+                    timestamp: Date.now(),
+                    emotion: dominant,
+                    probabilities: { ...smoothedProbabilities }
+                };
+                emotionHistory.push(historyEntry);
+                if (emotionHistory.length > 500) emotionHistory.shift();
+                localStorage.setItem('emotionHistory', JSON.stringify(emotionHistory));
+
+                updateHistoryChart();
+                renderCalendar();
+                updateTrend();
+                updateMentalHealthWarning(smoothedProbabilities);
+                updatePanicDetection(smoothedProbabilities);
+                updateAttentionAndStress(smoothedProbabilities);
+                updateMoodRecommendation(dominant);
+                updateWeeklySummary();      // extra feature
+                checkCrisisAlert(dominant, smoothedProbabilities);
+            }
+
+            function updateEmotionPanel(probs, dominant) {
+                const conf = probs[dominant];
+                dominantSpan.innerText = `${emotionDisplay[dominant]} · ${Math.round(conf*100)}%`;
+                let bars = '';
+                for (let em of emotionList) {
+                    const val = probs[em] || 0;
+                    const percent = Math.round(val*100);
+                    bars += `<div class="bar-item"><span class="bar-label">${emotionDisplay[em]}</span><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div><span>${percent}%</span></div>`;
+                }
+                emotionBarsDiv.innerHTML = bars;
+            }
+
+            function updateFeedback(dominant, probs) {
+                const stress = (probs.angry||0)*1.2 + (probs.fearful||0)*1.3 + (probs.sad||0)*0.8;
+                const stressPercent = Math.min(100, Math.round(stress * 70));
+                const msg = generateFeedback(dominant, stressPercent, currentLang);
+                feedbackDiv.innerText = msg;
+                feedbackDiv.setAttribute('data-emotion', dominant);
+            }
+
+            function updateMentalHealthWarning(probs) {
+                const neg = (probs.sad||0) + (probs.angry||0) + (probs.fearful||0) + (probs.disgusted||0);
+                document.getElementById('mentalHealthWarning').innerHTML = neg > 0.6 ? '🔴 distress' : neg > 0.3 ? '🟡 moderate' : '🟢 stable';
+            }
+            function updatePanicDetection(probs) {
+                const fear = probs.fearful || 0;
+                document.getElementById('panicAlert').innerHTML = fear > 0.5 ? '🔴 PANIC' : fear > 0.25 ? '🟡 elevated' : '🟢 no panic';
+            }
+            function updateAttentionAndStress(probs) {
+                const attention = (probs.neutral||0) + (probs.happy||0);
+                const attPct = Math.min(100, Math.round(attention * 100));
+                document.getElementById('attentionLevel').innerHTML = `🎯 focus: ${attPct}%`;
+                document.getElementById('attentionFill').style.width = attPct + '%';
+
+                const stress = (probs.angry||0)*1.2 + (probs.fearful||0)*1.3 + (probs.sad||0)*0.8;
+                const stressPct = Math.min(100, Math.round(stress * 70));
+                document.getElementById('stressValue').innerHTML = `stress: ${stressPct}%`;
+                document.getElementById('stressFill').style.width = stressPct + '%';
+            }
+            function updateMoodRecommendation(dominant) {
+                const recMap = {
+                    happy: '😊 enjoy your happiness · spread smiles',
+                    sad: '😢 listen to soothing music · you are not alone',
+                    angry: '😠 take deep breaths · count to ten',
+                    fearful: '😨 grounding exercises · you are safe',
+                    disgusted: '🤢 change your scene · fresh air helps',
+                    surprised: '😲 embrace the surprise · stay curious',
+                    neutral: '😐 calm and focused · great time to study'
+                };
+                document.getElementById('moodRecommendation').innerHTML = recMap[dominant] || 'take care 💙';
+            }
+            function updateTrend() {
+                const last3 = emotionHistory.slice(-3).map(d => d.emotion);
+                const freq = {};
+                last3.forEach(e => freq[e] = (freq[e]||0)+1);
+                const predicted = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'neutral';
+                document.getElementById('trendPrediction').innerText = `next: ${emotionDisplay[predicted]}`;
+            }
+            function updateHistoryChart() {
+                const ctx = document.getElementById('historyChart').getContext('2d');
+                if (chart) chart.destroy();
+                const last20 = emotionHistory.slice(-20);
+                const labels = last20.map((_,i)=>i);
+                const datasets = emotionList.map(em => ({
+                    label: em,
+                    data: last20.map(d => d.probabilities?.[em]*100 || 0),
+                    borderColor: getColor(em),
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 2
+                }));
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100 } } }
+                });
+            }
+            function getColor(em) {
+                const map = { happy:'#ffd966', sad:'#6d8cff', angry:'#ff6b6b', fearful:'#b57edc', disgusted:'#6b8e23', surprised:'#f4a261', neutral:'#a0a0a0' };
+                return map[em] || '#ffffff';
+            }
+            function renderCalendar() {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+                let gridHtml = '';
+                for (let i = 0; i < firstDay; i++) gridHtml += '<div class="cal-day" style="background:transparent;"></div>';
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = new Date(year, month, d).toDateString();
+                    const dayStart = new Date(year, month, d).getTime();
+                    const dayEnd = dayStart + 86400000;
+                    const dayEntries = emotionHistory.filter(e => e.timestamp >= dayStart && e.timestamp < dayEnd);
+                    let emoji = '😶';
+                    if (dayEntries.length > 0) {
+                        const freq = {};
+                        dayEntries.forEach(e => freq[e.emotion] = (freq[e.emotion]||0)+1);
+                        const mostFreq = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+                        const dom = mostFreq ? mostFreq[0] : 'neutral';
+                        emoji = { happy:'😊', sad:'😢', angry:'😠', fearful:'😨', disgusted:'🤢', surprised:'😲', neutral:'😐' }[dom] || '😐';
+                    }
+                    const selectedClass = (dateStr === selectedDate) ? 'selected' : '';
+                    gridHtml += `<div class="cal-day ${selectedClass}" data-date="${dateStr}">${d}<br>${emoji}</div>`;
+                }
+                document.getElementById('calendarGrid').innerHTML = gridHtml;
+                document.querySelectorAll('.cal-day[data-date]').forEach(day => {
+                    day.addEventListener('click', (e) => {
+                        selectedDate = day.dataset.date;
+                        renderCalendar();
+                    });
+                });
+            }
+            document.getElementById('prevMonthBtn').addEventListener('click', ()=>{ currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); });
+            document.getElementById('nextMonthBtn').addEventListener('click', ()=>{ currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); });
+
+            document.getElementById('startWebcamBtn').addEventListener('click', startWebcam);
+            document.getElementById('stopWebcamBtn').addEventListener('click', stopWebcam);
+            document.getElementById('uploadFaceBtn').addEventListener('click', ()=>{
+                const input = document.createElement('input');
+                input.type='file'; input.accept='image/*';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    if (isVideoActive) stopWebcam();
+                    const url = URL.createObjectURL(file);
+                    faceImage.src = url;
+                    faceImage.style.display = 'block';
+                    faceVideo.style.display = 'none';
+                    faceImage.onload = ()=>{
+                        faceCanvas.width = faceImage.width;
+                        faceCanvas.height = faceImage.height;
+                        detectFaces(faceImage);
+                        URL.revokeObjectURL(url);
+                    };
+                };
+                input.click();
+            });
+
+            async function startWebcam() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    videoStream = stream;
+                    faceVideo.srcObject = stream;
+                    await faceVideo.play();
+                    faceVideo.style.display = 'block';
+                    faceImage.style.display = 'none';
+                    isVideoActive = true;
+                    document.getElementById('stopWebcamBtn').disabled = false;
+                    document.getElementById('startWebcamBtn').disabled = true;
+                    document.getElementById('uploadFaceBtn').disabled = true;
+                    document.getElementById('camPerm').innerHTML = '<i class="fas fa-video"></i> camera on';
+                    faceVideo.addEventListener('loadedmetadata', () => {
+                        faceCanvas.width = faceVideo.videoWidth;
+                        faceCanvas.height = faceVideo.videoHeight;
+                    });
+                    if (detectionInterval) clearInterval(detectionInterval);
+                    detectionInterval = setInterval(async ()=>{
+                        if (faceVideo.readyState >= 2) await detectFaces(faceVideo);
+                    }, 150);
+                } catch (err) { alert('webcam error'); }
+            }
+
+            function stopWebcam() {
+                if (videoStream) videoStream.getTracks().forEach(t=>t.stop());
+                faceVideo.srcObject = null;
+                faceVideo.style.display = 'none';
+                if (faceImage.src && faceImage.src!=='#') faceImage.style.display='block';
+                else faceImage.style.display='none';
+                isVideoActive = false;
+                document.getElementById('stopWebcamBtn').disabled = true;
+                document.getElementById('startWebcamBtn').disabled = false;
+                document.getElementById('uploadFaceBtn').disabled = false;
+                document.getElementById('camPerm').innerHTML = '<i class="fas fa-video"></i> camera?';
+                if (detectionInterval) clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+
+            document.getElementById('generatePdfBtn').addEventListener('click', ()=>{
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.text('Mental Wellness Report', 14, 20);
+                doc.setFontSize(12);
+                doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
+
+                if (emotionHistory.length === 0) {
+                    doc.text('No emotion data available.', 14, 40);
+                } else {
+                    const last30 = emotionHistory.slice(-30);
+                    const emotionCounts = {};
+                    last30.forEach(e => emotionCounts[e.emotion] = (emotionCounts[e.emotion]||0)+1);
+                    const mostFreq = Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
+                    const avgStress = last30.reduce((acc, e) => {
+                        const s = (e.probabilities.angry||0)*1.2 + (e.probabilities.fearful||0)*1.3 + (e.probabilities.sad||0)*0.8;
+                        return acc + Math.min(100, s*70);
+                    }, 0) / last30.length;
+
+                    doc.text(`Most frequent mood (last 30): ${mostFreq?.[0] || 'none'} (${mostFreq?.[1] || 0} times)`, 14, 40);
+                    doc.text(`Average stress level: ${Math.round(avgStress)}%`, 14, 50);
+                    doc.text('Daily mood summary:', 14, 60);
+
+                    const last7days = [];
+                    const now = Date.now();
+                    for (let i = 6; i >= 0; i--) {
+                        const dayStart = now - i * 86400000;
+                        const dayEnd = dayStart + 86400000;
+                        const dayEntries = emotionHistory.filter(e => e.timestamp >= dayStart && e.timestamp < dayEnd);
+                        if (dayEntries.length > 0) {
+                            const freq = {};
+                            dayEntries.forEach(e => freq[e.emotion] = (freq[e.emotion]||0)+1);
+                            const mostFreqDay = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0];
+                            const confidence = dayEntries[dayEntries.length-1].probabilities[mostFreqDay] * 100;
+                            const dateStr = new Date(dayStart).toLocaleDateString();
+                            last7days.push([dateStr, mostFreqDay, `${Math.round(confidence)}%`]);
+                        }
+                    }
+                    if (last7days.length > 0) {
+                        doc.autoTable({ startY: 65, head: [['Date', 'Mood', 'Conf.']], body: last7days });
+                    } else {
+                        doc.text('No data in last 7 days.', 14, 70);
+                    }
+                }
+                doc.save('wellness_report.pdf');
+            });
+
+            document.getElementById('analyzeSentenceBtn').addEventListener('click', ()=>{
+                const text = document.getElementById('sentenceInput').value;
+                if (!text.trim()) return;
+                const { dominant, probs } = analyzeFullSentence(text, currentLang);
+                document.getElementById('sentenceResult').innerHTML = `${emotionDisplay[dominant]}`;
+                const stress = (probs.angry||0)*1.2 + (probs.fearful||0)*1.3 + (probs.sad||0)*0.8;
+                const stressPercent = Math.min(100, Math.round(stress * 70));
+                const feedback = generateFeedback(dominant, stressPercent, currentLang);
+                const textFeedback = document.getElementById('textFeedback');
+                textFeedback.innerText = feedback;
+                textFeedback.setAttribute('data-emotion', dominant);
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(feedback);
+                    utterance.lang = currentLang === 'ta' ? 'ta-IN' : 'en-IN';
+                    window.speechSynthesis.speak(utterance);
+                }
+            });
+
+            let voiceRec = null, isListening = false, finalTranscript = '';
+            document.getElementById('voiceStartBtn').addEventListener('click', ()=>{
+                if (!('webkitSpeechRecognition' in window)) { alert('voice not supported'); return; }
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                voiceRec = new SpeechRecognition();
+                voiceRec.continuous = true;
+                voiceRec.interimResults = true;
+                voiceRec.lang = currentLang === 'ta' ? 'ta-IN' : 'en-IN';
+                voiceRec.start();
+                isListening = true;
+                document.getElementById('voiceStartBtn').disabled = true;
+                document.getElementById('voiceStopBtn').disabled = false;
+                document.getElementById('micPerm').innerHTML = '<i class="fas fa-microphone"></i> mic on';
+                finalTranscript = '';
+                voiceRec.onresult = (e) => {
+                    let interim = '';
+                    for (let i = e.resultIndex; i < e.results.length; i++) {
+                        const tr = e.results[i][0].transcript;
+                        if (e.results[i].isFinal) finalTranscript += tr + ' ';
+                        else interim += tr;
+                    }
+                    document.getElementById('voiceTranscript').innerText = finalTranscript + (interim ? ' [ ' + interim + ' ]' : '');
+                    const combined = finalTranscript + ' ' + interim;
+                    if (combined.trim().length > 0) {
+                        const { dominant, probs } = analyzeFullSentence(combined, currentLang);
+                        document.getElementById('voiceSentimentLabel').innerHTML = emotionDisplay[dominant];
+                        const stress = (probs.angry||0)*1.2 + (probs.fearful||0)*1.3 + (probs.sad||0)*0.8;
+                        const stressPercent = Math.min(100, Math.round(stress * 70));
+                        const feedback = generateFeedback(dominant, stressPercent, currentLang);
+                        const voiceFeedback = document.getElementById('voiceFeedback');
+                        voiceFeedback.innerText = feedback;
+                        voiceFeedback.setAttribute('data-emotion', dominant);
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance(feedback);
+                            utterance.lang = currentLang === 'ta' ? 'ta-IN' : 'en-IN';
+                            window.speechSynthesis.speak(utterance);
+                        }
+                    }
+                };
+                voiceRec.onerror = () => stopVoice();
+                voiceRec.onend = () => { if (isListening) voiceRec.start(); };
+            });
+            document.getElementById('voiceStopBtn').addEventListener('click', stopVoice);
+            function stopVoice() {
+                if (voiceRec && isListening) { voiceRec.stop(); isListening = false; }
+                document.getElementById('voiceStartBtn').disabled = false;
+                document.getElementById('voiceStopBtn').disabled = true;
+                document.getElementById('micPerm').innerHTML = '<i class="fas fa-microphone"></i> mic?';
+            }
+
+            langSelect.addEventListener('change', (e) => {
+                currentLang = e.target.value;
+            });
+
+            document.getElementById('darkToggle').addEventListener('click', ()=>{
+                document.body.classList.toggle('dark');
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', ()=>{
+                    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+                    document.getElementById(btn.dataset.tab+'Tab').classList.add('active');
+                });
+            });
+
+            // ---------- EXTRA FEATURES (wellness) ----------
+            const affirmations = [
+                "You are capable and strong.",
+                "Today is full of possibilities.",
+                "You are enough just as you are.",
+                "Every step forward is progress.",
+                "You deserve kindness and peace.",
+                "Your feelings are valid.",
+                "You have the power to create change.",
+                "Breathe. You've got this."
+            ];
+            const activities = {
+                happy: ["Share your joy with a friend.", "Dance to your favorite song.", "Go for a walk in nature."],
+                sad: ["Listen to calming music.", "Write in a journal.", "Talk to someone you trust."],
+                angry: ["Count to ten slowly.", "Punch a pillow safely.", "Go for a run."],
+                fearful: ["Try grounding exercises.", "Take slow, deep breaths.", "Visualize a safe place."],
+                disgusted: ["Step outside for fresh air.", "Clean your workspace.", "Watch a funny video."],
+                surprised: ["Embrace the unexpected.", "Reflect on what surprised you.", "Share the moment with someone."],
+                neutral: ["Plan your next goal.", "Read a book.", "Try something new."]
+            };
+
+            document.getElementById('newAffirmationBtn').addEventListener('click', ()=>{
+                const rand = Math.floor(Math.random() * affirmations.length);
+                document.getElementById('affirmationText').innerText = affirmations[rand];
+            });
+
+            document.getElementById('newActivityBtn').addEventListener('click', ()=>{
+                let currentEmotion = 'neutral';
+                if (emotionHistory.length > 0) {
+                    currentEmotion = emotionHistory[emotionHistory.length-1].emotion;
+                }
+                const list = activities[currentEmotion] || activities.neutral;
+                const rand = Math.floor(Math.random() * list.length);
+                document.getElementById('activitySuggestion').innerText = list[rand];
+            });
+
+            document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+                if (emotionHistory.length === 0) { alert('No data to export'); return; }
+                const data = emotionHistory.map(e => ({
+                    date: new Date(e.timestamp).toLocaleString(),
+                    emotion: e.emotion,
+                    ...e.probabilities
+                }));
+                const csv = Papa.unparse(data);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'emotion_history.csv';
+                link.click();
+            });
+
+            function updateWeeklySummary() {
+                const now = Date.now();
+                const counts = { happy:0, sad:0, angry:0, neutral:0 };
+                for (let i = 6; i >= 0; i--) {
+                    const dayStart = now - i * 86400000;
+                    const dayEnd = dayStart + 86400000;
+                    const dayEntries = emotionHistory.filter(e => e.timestamp >= dayStart && e.timestamp < dayEnd);
+                    if (dayEntries.length > 0) {
+                        const freq = {};
+                        dayEntries.forEach(e => freq[e.emotion] = (freq[e.emotion]||0)+1);
+                        const mostFreq = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0];
+                        counts[mostFreq] = (counts[mostFreq]||0)+1;
+                    }
+                }
+                document.getElementById('weeklySummary').innerHTML = `😊 ${counts.happy} · 😢 ${counts.sad} · 😠 ${counts.angry} · 😐 ${counts.neutral}`;
+            }
+
+            function checkCrisisAlert(dominant, probs) {
+                if ((dominant === 'fearful' || dominant === 'angry') && probs[dominant] > 0.6) {
+                    document.getElementById('crisisAlert').style.display = 'block';
+                } else {
+                    document.getElementById('crisisAlert').style.display = 'none';
+                }
+            }
+
+            // override push to update weekly summary and crisis on new entries
+            const originalPush = emotionHistory.push;
+            emotionHistory.push = function(...args) {
+                const result = originalPush.apply(this, args);
+                updateWeeklySummary();
+                const last = this[this.length-1];
+                checkCrisisAlert(last.emotion, last.probabilities);
+                return result;
+            };
+
+            document.getElementById('startBreathingBtn').addEventListener('click', ()=>{
+                const circle = document.querySelector('.breath-circle');
+                circle.style.animation = 'none';
+                void circle.offsetHeight; // reflow
+                circle.style.animation = 'breathe 8s infinite';
+            });
+
+            // initial calls
+            loadModels();
+            renderCalendar();
+            if (emotionHistory.length > 0) {
+                updateHistoryChart();
+                updateTrend();
+            }
+            updateWeeklySummary();
+        })();
+    </script>
+</body>
+</html>
